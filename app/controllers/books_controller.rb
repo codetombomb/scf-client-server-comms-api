@@ -1,4 +1,5 @@
 class BooksController < ApplicationController
+    before_action(:set_book, only: [:show, :update, :destroy])
 
     def index
         books = Book.all 
@@ -6,38 +7,36 @@ class BooksController < ApplicationController
     end
 
     def create
-        
+        book = Book.create!(book_params)
+        render json: book, status: :created
     end
 
     def show
-        book = Book.find_by(id: params[:id])
-        if book
-            render json: book
-        else
-            render json: { errors: ["Book with id of #{params[:id]} does not exist"]}, status: :not_found
-        end
+        render json: @book
     end
 
     def update
-        book = Book.find_by(id: params[:id])
-        if book
-            book.update(book_params)
-            render json: book, status: :ok
-        else
-            render json: { errors: ["Book with id of #{params[:id]} does not exist"]}, status: :not_found
-        end
+        @book.update(book_params)
+        render json: @book, status: :ok
     end
     
     def destroy
-        book = Book.find_by(id: params[:id])
-        if book
-            book.destroy
-            head :no_content
-        else
-            render json: { errors: ["Book with id of #{params[:id]} does not exist"]}, status: :not_found
+        @book.destroy 
+        head :no_content
+    end
+    
+    private
+
+    def set_book
+        @book = Book.find_by(id: params[:id])
+        if !@book 
+            render_not_found
         end
     end
-    private
+
+    def render_not_found
+        render json: { errors: ["Book with id of #{params[:id]} does not exist"]}, status: :not_found
+    end
 
     def book_params
         params.require(:book).permit(:id, :title, :author, :description, :cover_image_url)
